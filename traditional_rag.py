@@ -4,6 +4,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
+import pymupdf4llm
 
 def format_docs(docs):
     '''
@@ -21,7 +22,7 @@ def flatten(xss):
     return [x for xs in xss for x in xs]
 
 
-def quick_create_retriever(path_to_article, api_key):
+def quick_create_retriever(path_to_article, article_title, api_key):
   recursive_text_splitter = RecursiveCharacterTextSplitter(
       separators=["\n\n","\n", " "],
       chunk_size = 800,
@@ -30,8 +31,7 @@ def quick_create_retriever(path_to_article, api_key):
   )
 
   # splits
-  splits = flatten([recursive_text_splitter.create_documents(texts=[i['text']]) for i in (pymupdf4llm.to_markdown(path_to_data, page_chunks=True))])
-
+  splits = flatten([recursive_text_splitter.create_documents(texts=[f"article title: {article_title}\n" + i['text']]) for i in (pymupdf4llm.to_markdown(path_to_article, page_chunks=True))])
 
   # storing them into the vector database
   embeddings = OpenAIEmbeddings(api_key=api_key)
