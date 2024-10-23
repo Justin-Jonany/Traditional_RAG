@@ -43,7 +43,7 @@ def quick_create_retriever(path_to_article, article_title, api_key):
 
   # retriever
   article_retriever = article_vector_store.as_retriever(search_kwargs={"k": 5})
-    
+  return article_retriever
 
 def traditional_rag(question, retriever, llm, verbose=True):
     '''
