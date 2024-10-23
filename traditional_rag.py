@@ -1,6 +1,9 @@
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_chroma import Chroma
 
 def format_docs(docs):
     '''
@@ -14,6 +17,33 @@ def format_docs(docs):
     '''
     return "\n\n".join(doc.page_content for doc in docs)
 
+def flatten(xss):
+    return [x for xs in xss for x in xs]
+
+
+def quick_create_retriever(path_to_article, api_key):
+  recursive_text_splitter = RecursiveCharacterTextSplitter(
+      separators=["\n\n","\n", " "],
+      chunk_size = 800,
+      chunk_overlap = 100,
+      is_separator_regex=False
+  )
+
+  # splits
+  splits = flatten([recursive_text_splitter.create_documents(texts=[i['text']]) for i in (pymupdf4llm.to_markdown(path_to_data, page_chunks=True))])
+
+
+  # storing them into the vector database
+  embeddings = OpenAIEmbeddings(api_key=api_key)
+  article_vector_store = Chroma(
+      collection_name="article",
+      embedding_function=embeddings,
+  )
+  article_vector_store.add_documents(documents=splits, ids=[f'id_{i}' for i in range(1, len(splits) + 1)]);
+
+  # retriever
+  article_retriever = article_vector_store.as_retriever(search_kwargs={"k": 5})
+    
 
 def traditional_rag(question, retriever, llm, verbose=True):
     '''

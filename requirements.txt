@@ -1,1 +1,4 @@
 langchain_core
+langchain_text_splitters
+langchain_openai
+langchain_chroma
